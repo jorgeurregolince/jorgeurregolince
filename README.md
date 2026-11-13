@@ -13,8 +13,10 @@ Shooter retro en pixel art (`duna/index.html`). Mueve al soldado con el dedo izq
 
 # Mascota (mod de Claude Code)
 
-`mascota/` es un mod para Claude Code: Pip, una mascota animada sobre el prompt que muestra en vivo lo que Claude está haciendo (pensar, leer, editar, ejecutar, responder). Instálalo con:
+`.claude/skills/mascota/` es un mod para Claude Code: Pip, una mascota animada sobre el prompt que muestra en vivo lo que Claude está haciendo (pensar, leer, editar, ejecutar, responder). Instálalo con:
 
 ```
 /plugin install mascota --marketplace jorgeurregolince/jorgeurregolince
 ```
+
+En las sesiones de Claude Code en la nube, Pip se carga solo si el entorno tiene el script de configuración que apunta `CLAUDE_CODE_PLUGIN_DIRS` a esa carpeta.

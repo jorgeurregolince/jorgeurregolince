@@ -44,9 +44,9 @@ Responde `y` para añadir el marketplace y elige el alcance (user). Pip aparece 
 ## Desarrollo
 
 ```bash
-claude plugin validate mascota
+claude plugin validate .claude/skills/mascota
 ```
 
 ```bash
-claude plugin test mascota
+claude plugin test .claude/skills/mascota
 ```

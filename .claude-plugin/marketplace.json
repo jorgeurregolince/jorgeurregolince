@@ -4,7 +4,7 @@
   "plugins": [
     {
       "name": "mascota",
-      "source": "./mascota",
+      "source": "./.claude/skills/mascota",
       "description": "Una mascota animada sobre el prompt que muestra en vivo lo que Claude está haciendo."
     }
   ]
