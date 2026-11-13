@@ -1,0 +1,11 @@
+{
+  "name": "jorgeurregolince",
+  "owner": { "name": "jorgeurregolince" },
+  "plugins": [
+    {
+      "name": "mascota",
+      "source": "./mascota",
+      "description": "Una mascota animada sobre el prompt que muestra en vivo lo que Claude está haciendo."
+    }
+  ]
+}
