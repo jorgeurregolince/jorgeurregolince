@@ -9,6 +9,12 @@
       "source": "./.claude/skills/mascota",
       "description": "Una mascota animada sobre el prompt que muestra en vivo lo que Claude está haciendo.",
       "version": "0.5.0"
+    },
+    {
+      "name": "bit",
+      "source": "./.claude/skills/bit",
+      "version": "0.2.0",
+      "description": "Bit, un robot que es como el cuerpo de Claude: te habla, le hablas, y crece y evoluciona con cada tarea."
     }
   ]
 }
