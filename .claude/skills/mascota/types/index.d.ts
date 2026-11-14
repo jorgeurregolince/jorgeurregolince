@@ -24,6 +24,6 @@ export type PetView = {
 
 declare module 'claude-code' {
   interface PluginState {
-    mascota: { view: Shaped<PetView>; isHidden: boolean }
+    mascota: { view: Shaped<PetView>; isHidden: boolean; spot: number }
   }
 }
