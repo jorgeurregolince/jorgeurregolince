@@ -5,7 +5,7 @@ import type { Mood, PetView } from '../types'
 import { MOOD_COLOR, petSvg } from './art'
 
 const NAME = 'Pip'
-const VERSION = '0.5.0'
+const VERSION = '0.5.1'
 const TICK_MS = 350
 const DONE_MS = 6000
 const SLEEP_MS = 90_000
@@ -301,7 +301,7 @@ function compose(v: PetView, isWorking: boolean, room: number): Drawn {
   }
 }
 
-// Pip on his strip, in the apps: the SVG sits at his spot (the free room split
+// Pip on his strip, in the apps (a ▁ there is about 11.5 px wide): the SVG sits at his spot (the free room split
 // spot : 1 - spot around him) over the strip that draws his shadow and takes
 // the drags. Where the surface has no Client (VS Code, phones) he stays put.
 function stage(r: any, at: number, color: string, figure: any, px: number) {
@@ -323,7 +323,7 @@ function stage(r: any, at: number, color: string, figure: any, px: number) {
       <Client
         key="stage"
         module="./stage.tsx"
-        props={{ spot: at, lines: [], color, shadow: Math.round(px / 8) }}
+        props={{ spot: at, lines: [], color, shadow: Math.round(px / 11.5) }}
         width="100%"
         height={1}
       />
