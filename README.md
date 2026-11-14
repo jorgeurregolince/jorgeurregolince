@@ -10,3 +10,13 @@ Reglas: luciérnaga = 1 punto, dorada = 5, racha de 10 o más = puntos dobles. T
 # Operación Duna
 
 Shooter retro en pixel art (`duna/index.html`). Mueve al soldado con el dedo izquierdo, mantén FUEGO para disparar (apunta solo) y usa GRAN para lanzar granadas. Sobrevive a las oleadas; los barriles rojos explotan y los botiquines curan.
+
+# Mascota (mod de Claude Code)
+
+`.claude/skills/mascota/` es un mod para Claude Code: Pip, una mascota animada sobre el prompt que muestra en vivo lo que Claude está haciendo (pensar, leer, editar, ejecutar, responder). Instálalo con:
+
+```
+/plugin install mascota --marketplace jorgeurregolince/jorgeurregolince
+```
+
+En las sesiones de Claude Code en la nube, Pip se carga solo si el entorno tiene el script de configuración que apunta `CLAUDE_CODE_PLUGIN_DIRS` a esa carpeta.
