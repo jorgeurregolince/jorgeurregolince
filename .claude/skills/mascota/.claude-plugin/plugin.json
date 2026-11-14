@@ -1,6 +1,6 @@
 {
   "name": "mascota",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Una mascota animada sobre el prompt que muestra en vivo lo que Claude está haciendo: pensar, leer, editar, ejecutar, responder.",
   "types": "./types/index.d.ts"
 }
