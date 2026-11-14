@@ -52,9 +52,15 @@ const Stage: ClientModule<StageProps, StageState> = (props, surface) => {
         <Text color={props.color}>{pad + line}</Text>
       ))}
       {lines.length === 0 && (
-        <Text color={props.color} dimColor={!dragging}>
-          {pad + shadow}
-        </Text>
+        // In the apps a space is narrower than a cell, so the shadow is placed
+        // the way the SVG above it is: the free room split spot : 1 - spot.
+        <Box flexDirection="row">
+          <Box flexGrow={Math.round(spot * 1000)} />
+          <Text color={props.color} dimColor={!dragging}>
+            {shadow}
+          </Text>
+          <Box flexGrow={Math.round((1 - spot) * 1000)} />
+        </Box>
       )}
     </Box>
   )
