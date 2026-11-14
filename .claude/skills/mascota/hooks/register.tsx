@@ -248,6 +248,41 @@ function startTicking($: EngineInterface) {
   timer = $.clock.every(TICK_MS, () => void tick($))
 }
 
+const PANE = 'mascota'
+
+async function openPet($: EngineInterface) {
+  return $.ui.open({ id: PANE, title: NAME, placement: 'widget' })
+}
+
+type Drawn = { look: Look; art: string[]; headline: string; bubble: string; stats: string }
+
+function compose(v: PetView, isWorking: boolean, room: number): Drawn {
+  // The surface can say a turn runs before the first chunk reaches the tick.
+  const shown: Mood = isWorking && !BUSY.has(v.mood) ? 'thinking' : v.mood
+  const look = LOOKS[shown]
+  const parts: string[] = []
+  if (v.tools > 0) parts.push(`${v.tools} herramienta${v.tools === 1 ? '' : 's'}`)
+  if (v.thoughtChars > 0)
+    parts.push(
+      `${v.thoughtChars >= 1000 ? (v.thoughtChars / 1000).toFixed(1) + 'k' : v.thoughtChars} car. pensados`,
+    )
+  const dots = BUSY.has(shown) ? '.'.repeat((v.frame % 3) + 1) : ''
+  const fit = Math.max(8, room)
+  const bubble =
+    shown === 'thinking'
+      ? v.bubble
+        ? '“' + (v.bubble.length > fit - 2 ? '…' + v.bubble.slice(-(fit - 3)) : v.bubble) + '”'
+        : '…'
+      : ''
+  return {
+    look,
+    art: drawCreature(look, v.frame),
+    headline: `${look.label}${v.detail ? ' ' + v.detail : ''}${dots}`,
+    bubble,
+    stats: parts.join(' · '),
+  }
+}
+
 // ------------------------------------------------------------------- the mod
 
 export const register: Register = on => {
@@ -255,9 +290,10 @@ export const register: Register = on => {
     lastActive = Date.now()
     await $.command.register({
       name: 'mascota',
-      description: `Muestra u oculta a ${NAME}, la mascota que te enseña lo que Claude está haciendo`,
+      description: `Abre a ${NAME}, la mascota que te enseña lo que Claude está haciendo ("/mascota ocultar" la quita de encima del prompt)`,
     })
     startTicking($)
+    void openPet($)
     return next(e)
   })
 
@@ -267,12 +303,17 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('command.run', { command: 'mascota' }, async $ => {
-    const hidden = await update($, isHidden, h => !h)
+  on('command.run', { command: 'mascota' }, async ($, e) => {
+    if (/ocult|hide|quita/i.test(e.args)) {
+      await update($, isHidden, () => true)
+      return { text: `${NAME} ya no se muestra encima del prompt. Escribe /mascota para traerlo de vuelta.` }
+    }
+    await update($, isHidden, () => false)
+    const { isPlaced } = await openPet($)
     return {
-      text: hidden
-        ? `${NAME} se fue a dormir. Escribe /mascota para traerlo de vuelta.`
-        : `${NAME} está de vuelta sobre el prompt.`,
+      text: isPlaced
+        ? `${NAME} está aquí: míralo en su panel.`
+        : `${NAME} está encima del prompt (esta app no muestra paneles).`,
     }
   })
 
@@ -328,53 +369,77 @@ export const register: Register = on => {
     return next(e)
   })
 
+  on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
+    const { Box, Text } = $.ui.resolve(e)
+    const v = await read($, view)
+    const isWidget = e.props.placement === 'widget'
+    const d = compose(v, BUSY.has(v.mood), e.props.bodyColumns - (isWidget ? 2 : 14))
+
+    if (isWidget) {
+      return (
+        <Box flexDirection="column" alignItems="center">
+          {d.art.map(line => (
+            <Text color={d.look.color}>{line}</Text>
+          ))}
+          <Text color={d.look.color} wrap="truncate-end">
+            {d.headline}
+          </Text>
+        </Box>
+      )
+    }
+
+    return (
+      <Box flexDirection="column">
+        <Box flexDirection="row">
+          <Box flexDirection="column" width={12}>
+            {d.art.map(line => (
+              <Text color={d.look.color}>{line}</Text>
+            ))}
+          </Box>
+          <Box flexDirection="column" flexGrow={1}>
+            <Text weight="bold" color={d.look.color}>
+              {NAME}
+            </Text>
+            <Text>{d.headline}</Text>
+            <Text dimColor>{d.stats || ' '}</Text>
+          </Box>
+        </Box>
+        {d.bubble !== '' && (
+          <Text dimColor italic>
+            {d.bubble}
+          </Text>
+        )}
+      </Box>
+    )
+  })
+
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.props.hasSurvey || (await read($, isHidden))) {
       return next(e)
     }
     const { Box, Text } = $.ui.resolve(e)
     const v = await read($, view)
-    // The band can say a turn runs before the first chunk reaches the tick.
-    const shown: Mood = e.props.isWorking && !BUSY.has(v.mood) ? 'thinking' : v.mood
-    const look = LOOKS[shown]
-    const art = drawCreature(look, v.frame)
-    const room = Math.max(10, e.props.bodyColumns - 14)
-
-    const stats: string[] = []
-    if (v.tools > 0) stats.push(`${v.tools} herramienta${v.tools === 1 ? '' : 's'}`)
-    if (v.thoughtChars > 0)
-      stats.push(
-        `${v.thoughtChars >= 1000 ? (v.thoughtChars / 1000).toFixed(1) + 'k' : v.thoughtChars} car. pensados`,
-      )
-
-    const dots = BUSY.has(shown) ? '.'.repeat((v.frame % 3) + 1) : ''
-    const headline = `${look.label}${v.detail ? ' ' + v.detail : ''}${dots}`
-    const bubble =
-      shown === 'thinking'
-        ? v.bubble
-          ? '“' + (v.bubble.length > room - 2 ? '…' + v.bubble.slice(-(room - 3)) : v.bubble) + '”'
-          : '…'
-        : ''
+    const d = compose(v, e.props.isWorking, e.props.bodyColumns - 14)
 
     return (
       <Box flexDirection="row">
         <Box flexDirection="column" width={12}>
-          {art.map(line => (
-            <Text color={look.color}>{line}</Text>
+          {d.art.map(line => (
+            <Text color={d.look.color}>{line}</Text>
           ))}
         </Box>
         <Box flexDirection="column" flexGrow={1}>
           <Text wrap="truncate-end">
-            <Text weight="bold" color={look.color}>
+            <Text weight="bold" color={d.look.color}>
               {NAME}
             </Text>
-            <Text> {headline}</Text>
+            <Text> {d.headline}</Text>
           </Text>
           <Text dimColor italic wrap="truncate-start">
-            {bubble || ' '}
+            {d.bubble || ' '}
           </Text>
           <Text dimColor wrap="truncate-end">
-            {stats.length > 0 ? stats.join(' · ') : ' '}
+            {d.stats || ' '}
           </Text>
         </Box>
       </Box>
