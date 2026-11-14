@@ -20,3 +20,11 @@ Shooter retro en pixel art (`duna/index.html`). Mueve al soldado con el dedo izq
 ```
 
 En las sesiones de Claude Code en la nube, Pip se carga solo si el entorno tiene el script de configuración que apunta `CLAUDE_CODE_PLUGIN_DIRS` a esa carpeta.
+
+# Bit (mod de Claude Code)
+
+`.claude/skills/bit/` es Bit, un robotito que es como el cuerpo de Claude: te resume cada respuesta en voz de Claude, le puedes hablar con `/bit <mensaje>`, y gana experiencia, sube de nivel y evoluciona en 5 formas. Instálalo con:
+
+```
+/plugin install bit --marketplace jorgeurregolince/jorgeurregolince
+```

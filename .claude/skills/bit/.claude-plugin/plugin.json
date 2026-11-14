@@ -1,0 +1,6 @@
+{
+  "name": "bit",
+  "version": "0.2.0",
+  "description": "Bit, un robotito que gana experiencia con cada tarea de Claude, sube de nivel y evoluciona en 5 formas.",
+  "types": "./types/index.d.ts"
+}
