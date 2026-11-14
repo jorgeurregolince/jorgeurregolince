@@ -2,6 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, Timer } from 'claude-code'
 
 import type { Mood, PetView } from '../types'
+import { MOOD_COLOR, petSvg } from './art'
 
 const NAME = 'Pip'
 const TICK_MS = 350
@@ -254,7 +255,14 @@ async function openPet($: EngineInterface) {
   return $.ui.open({ id: PANE, title: NAME, placement: 'widget' })
 }
 
-type Drawn = { look: Look; art: string[]; headline: string; bubble: string; stats: string }
+type Drawn = {
+  shown: Mood
+  look: Look
+  art: string[]
+  headline: string
+  bubble: string
+  stats: string
+}
 
 function compose(v: PetView, isWorking: boolean, room: number): Drawn {
   // The surface can say a turn runs before the first chunk reaches the tick.
@@ -275,6 +283,7 @@ function compose(v: PetView, isWorking: boolean, room: number): Drawn {
         : '…'
       : ''
   return {
+    shown,
     look,
     art: drawCreature(look, v.frame),
     headline: `${look.label}${v.detail ? ' ' + v.detail : ''}${dots}`,
@@ -370,18 +379,53 @@ export const register: Register = on => {
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
-    const { Box, Text } = $.ui.resolve(e)
     const v = await read($, view)
     const isWidget = e.props.placement === 'widget'
-    const d = compose(v, BUSY.has(v.mood), e.props.bodyColumns - (isWidget ? 2 : 14))
+    const d = compose(v, BUSY.has(v.mood), e.props.bodyColumns - (isWidget ? 2 : 4))
+
+    if (e.surface === 'terminal') {
+      const { Box, Text } = $.ui.resolve(e)
+      return (
+        <Box flexDirection="column">
+          <Box flexDirection="row">
+            <Box flexDirection="column" width={12}>
+              {d.art.map(line => (
+                <Text color={d.look.color}>{line}</Text>
+              ))}
+            </Box>
+            <Box flexDirection="column" flexGrow={1}>
+              <Text weight="bold" color={d.look.color}>
+                {NAME}
+              </Text>
+              <Text>{d.headline}</Text>
+              <Text dimColor>{d.stats || ' '}</Text>
+            </Box>
+          </Box>
+          {!isWidget && d.bubble !== '' && (
+            <Text dimColor italic>
+              {d.bubble}
+            </Text>
+          )}
+        </Box>
+      )
+    }
+
+    const { Box, Text, Svg } = $.ui.resolve(e)
+    const color = MOOD_COLOR[d.shown]
+    const figure = (
+      <Svg
+        source={petSvg(d.shown)}
+        alt={`${NAME}, la mascota: ${d.headline}`}
+        width={isWidget ? 96 : 132}
+        height={isWidget ? 88 : 121}
+      />
+    )
 
     if (isWidget) {
       return (
         <Box flexDirection="column" alignItems="center">
-          {d.art.map(line => (
-            <Text color={d.look.color}>{line}</Text>
-          ))}
-          <Text color={d.look.color} wrap="truncate-end">
+          {figure}
+          <Text color={color} weight="semibold" wrap="truncate-end">
             {d.headline}
           </Text>
         </Box>
@@ -389,26 +433,22 @@ export const register: Register = on => {
     }
 
     return (
-      <Box flexDirection="column">
-        <Box flexDirection="row">
-          <Box flexDirection="column" width={12}>
-            {d.art.map(line => (
-              <Text color={d.look.color}>{line}</Text>
-            ))}
-          </Box>
-          <Box flexDirection="column" flexGrow={1}>
-            <Text weight="bold" color={d.look.color}>
-              {NAME}
-            </Text>
-            <Text>{d.headline}</Text>
-            <Text dimColor>{d.stats || ' '}</Text>
-          </Box>
-        </Box>
-        {d.bubble !== '' && (
-          <Text dimColor italic>
-            {d.bubble}
+      <Box flexDirection="column" alignItems="center" gap={1}>
+        {figure}
+        <Text>
+          <Text weight="bold" color={color}>
+            {NAME}
           </Text>
+          <Text> {d.headline}</Text>
+        </Text>
+        {d.bubble !== '' && (
+          <Box borderStyle="round" borderColor={color} paddingX={1}>
+            <Text italic dimColor>
+              {d.bubble}
+            </Text>
+          </Box>
         )}
+        {d.stats !== '' && <Text dimColor>{d.stats}</Text>}
       </Box>
     )
   })
@@ -417,30 +457,58 @@ export const register: Register = on => {
     if (e.props.hasSurvey || (await read($, isHidden))) {
       return next(e)
     }
-    const { Box, Text } = $.ui.resolve(e)
     const v = await read($, view)
     const d = compose(v, e.props.isWorking, e.props.bodyColumns - 14)
 
-    return (
-      <Box flexDirection="row">
-        <Box flexDirection="column" width={12}>
-          {d.art.map(line => (
-            <Text color={d.look.color}>{line}</Text>
-          ))}
+    if (e.surface === 'terminal') {
+      const { Box, Text } = $.ui.resolve(e)
+      return (
+        <Box flexDirection="row">
+          <Box flexDirection="column" width={12}>
+            {d.art.map(line => (
+              <Text color={d.look.color}>{line}</Text>
+            ))}
+          </Box>
+          <Box flexDirection="column" flexGrow={1}>
+            <Text wrap="truncate-end">
+              <Text weight="bold" color={d.look.color}>
+                {NAME}
+              </Text>
+              <Text> {d.headline}</Text>
+            </Text>
+            <Text dimColor italic wrap="truncate-start">
+              {d.bubble || ' '}
+            </Text>
+            <Text dimColor wrap="truncate-end">
+              {d.stats || ' '}
+            </Text>
+          </Box>
         </Box>
+      )
+    }
+
+    const { Box, Text, Svg } = $.ui.resolve(e)
+    const color = MOOD_COLOR[d.shown]
+    return (
+      <Box flexDirection="row" alignItems="center" gap={1}>
+        <Svg source={petSvg(d.shown)} alt={`${NAME}: ${d.headline}`} width={56} height={51} />
         <Box flexDirection="column" flexGrow={1}>
           <Text wrap="truncate-end">
-            <Text weight="bold" color={d.look.color}>
+            <Text weight="bold" color={color}>
               {NAME}
             </Text>
             <Text> {d.headline}</Text>
           </Text>
-          <Text dimColor italic wrap="truncate-start">
-            {d.bubble || ' '}
-          </Text>
-          <Text dimColor wrap="truncate-end">
-            {d.stats || ' '}
-          </Text>
+          {d.bubble !== '' && (
+            <Text dimColor italic wrap="truncate-start">
+              {d.bubble}
+            </Text>
+          )}
+          {d.stats !== '' && (
+            <Text dimColor wrap="truncate-end">
+              {d.stats}
+            </Text>
+          )}
         </Box>
       </Box>
     )
