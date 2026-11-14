@@ -22,6 +22,10 @@ y te muestra en vivo lo que Claude está haciendo.
 
 `/mascota` lo oculta o lo vuelve a mostrar.
 
+**Arrástralo**: agarra la línea bajo Pip (su sombra) en la app de escritorio, o a Pip mismo en la
+terminal, y llévalo a donde quieras dentro de su franja o su panel. Recuerda dónde lo dejaste.
+En VS Code y en el celular se queda fijo.
+
 ## Instalar
 
 En el prompt de una sesión de Claude Code en la terminal:
