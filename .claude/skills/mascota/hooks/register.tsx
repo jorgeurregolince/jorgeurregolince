@@ -5,6 +5,7 @@ import type { Mood, PetView } from '../types'
 import { MOOD_COLOR, petSvg } from './art'
 
 const NAME = 'Pip'
+const VERSION = '0.3.1'
 const TICK_MS = 350
 const DONE_MS = 6000
 const SLEEP_MS = 90_000
@@ -315,14 +316,14 @@ export const register: Register = on => {
   on('command.run', { command: 'mascota' }, async ($, e) => {
     if (/ocult|hide|quita/i.test(e.args)) {
       await update($, isHidden, () => true)
-      return { text: `${NAME} ya no se muestra encima del prompt. Escribe /mascota para traerlo de vuelta.` }
+      return { text: `${NAME} v${VERSION} ya no se muestra encima del prompt. Escribe /mascota para traerlo de vuelta.` }
     }
     await update($, isHidden, () => false)
     const { isPlaced } = await openPet($)
     return {
       text: isPlaced
-        ? `${NAME} está aquí: míralo en su panel.`
-        : `${NAME} está encima del prompt (esta app no muestra paneles).`,
+        ? `${NAME} v${VERSION} está aquí: míralo en su panel.`
+        : `${NAME} v${VERSION} está encima del prompt (esta app no muestra paneles).`,
     }
   })
 
@@ -449,6 +450,7 @@ export const register: Register = on => {
           </Box>
         )}
         {d.stats !== '' && <Text dimColor>{d.stats}</Text>}
+        <Text dimColor>v{VERSION}</Text>
       </Box>
     )
   })
