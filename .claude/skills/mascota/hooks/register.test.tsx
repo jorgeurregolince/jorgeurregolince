@@ -53,6 +53,7 @@ const PANE = {
 test('Pip se abre como panel y se dibuja como widget y acoplado', async ($, on) => {
   let opened = 0
   mock.store(on)
+  const clock = mock.clock(on)
   on('command.register', () => ({ value: { command: 'mascota' } }))
   on('ui.open', () => {
     opened += 1
@@ -60,8 +61,18 @@ test('Pip se abre como panel y se dibuja como widget y acoplado', async ($, on) 
   })
   on('session.start', (_, e) => ({ cwd: e.cwd }))
 
+  // No band drawn (a phone): after a moment Pip opens in his pane.
   await $.session.start({ cwd: '/', surface: 'mobile', isInteractive: true })
+  expect(opened).toBe(0)
+  await clock.advance(6000)
   expect(opened).toBe(1)
+
+  // A band drawn on desktop: Pip stays there and no pane opens.
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  await clock.advance(6000)
+  expect(opened).toBe(1)
+  await band.unmount()
 
   for (const surface of ['terminal', 'desktop', 'vscode', 'mobile'] as const) {
     for (const placement of ['widget', 'dock'] as const) {
