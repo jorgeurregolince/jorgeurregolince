@@ -20,11 +20,13 @@ y te muestra en vivo lo que Claude está haciendo.
 - **¡listo! / ¡ups!**: al terminar el turno, o si una herramienta falla.
 - **durmiendo**: tras 90 segundos sin actividad.
 
-`/mascota` lo oculta o lo vuelve a mostrar.
+Pip vive en la franja de encima del prompt, a todo lo ancho del chat. `/mascota ocultar` lo quita,
+`/mascota` lo trae de vuelta y `/mascota panel` lo abre en su propio panel. Donde la franja no se
+dibuja (el celular, una sesión en la nube), Pip se abre solo en su panel.
 
 **Arrástralo**: agarra la línea bajo Pip (su sombra) en la app de escritorio, o a Pip mismo en la
-terminal, y llévalo a donde quieras dentro de su franja o su panel. Recuerda dónde lo dejaste.
-En VS Code y en el celular se queda fijo.
+terminal, y llévalo de un lado a otro. Recuerda dónde lo dejaste. En VS Code y en el celular se
+queda fijo.
 
 ## Instalar
 

@@ -5,7 +5,7 @@ import type { Mood, PetView } from '../types'
 import { MOOD_COLOR, petSvg } from './art'
 
 const NAME = 'Pip'
-const VERSION = '0.4.0'
+const VERSION = '0.5.0'
 const TICK_MS = 350
 const DONE_MS = 6000
 const SLEEP_MS = 90_000
@@ -212,6 +212,10 @@ let lastActive = 0
 let doneAt = 0
 let quietTicks = 0
 let timer: Timer | undefined
+// Set when a surface draws the band above the prompt; where none does (a phone,
+// an app showing a cloud session) Pip opens in his pane instead.
+let bandSeen = false
+const BAND_WAIT_MS = 5000
 
 function setMood(next: Mood, nextDetail = '') {
   mood = next
@@ -334,12 +338,15 @@ export const register: Register = on => {
     lastActive = Date.now()
     await $.command.register({
       name: 'mascota',
-      description: `Abre a ${NAME}, la mascota que te enseña lo que Claude está haciendo ("/mascota ocultar" la quita de encima del prompt)`,
+      description: `Muestra a ${NAME} encima del prompt ("/mascota panel" lo abre en su panel, "/mascota ocultar" lo quita)`,
     })
     const saved = await $.store.get('spot')
     if (saved !== undefined) await update($, spot, () => clamp01(saved))
     startTicking($)
-    void openPet($)
+    bandSeen = false
+    $.clock.after(BAND_WAIT_MS, () => {
+      if (!bandSeen) void openPet($)
+    })
     return next(e)
   })
 
@@ -355,11 +362,12 @@ export const register: Register = on => {
       return { text: `${NAME} v${VERSION} ya no se muestra encima del prompt. Escribe /mascota para traerlo de vuelta.` }
     }
     await update($, isHidden, () => false)
-    const { isPlaced } = await openPet($)
+    if (/panel|pane|widget/i.test(e.args) || !bandSeen) {
+      const { isPlaced } = await openPet($)
+      if (isPlaced) return { text: `${NAME} v${VERSION} está aquí: míralo en su panel.` }
+    }
     return {
-      text: isPlaced
-        ? `${NAME} v${VERSION} está aquí: míralo en su panel.`
-        : `${NAME} v${VERSION} está encima del prompt (esta app no muestra paneles).`,
+      text: `${NAME} v${VERSION} está encima del prompt: arrastra su sombra para moverlo de lado a lado.`,
     }
   })
 
@@ -511,22 +519,23 @@ export const register: Register = on => {
     if (e.props.hasSurvey || (await read($, isHidden))) {
       return next(e)
     }
+    if (e.surface === 'terminal' || e.surface === 'desktop') bandSeen = true
     const v = await read($, view)
     const at = await read($, spot)
-    const d = compose(v, e.props.isWorking, Math.floor(e.props.bodyColumns / 2))
+    const d = compose(v, e.props.isWorking, e.props.bodyColumns - 2)
 
     if (e.surface === 'terminal') {
       const { Box, Text, Client } = $.ui.resolve(e)
       return (
-        <Box flexDirection="row">
+        <Box flexDirection="column">
           <Client
             key="stage"
             module="./stage.tsx"
             props={{ spot: at, lines: d.art, color: d.look.color }}
-            flexGrow={1}
+            width="100%"
             height={3}
           />
-          <Box flexDirection="column" width="50%">
+          <Box flexDirection="column">
             <Text wrap="truncate-end">
               <Text weight="bold" color={d.look.color}>
                 {NAME}
@@ -548,17 +557,15 @@ export const register: Register = on => {
     const { Box, Text, Svg } = r
     const color = MOOD_COLOR[d.shown]
     return (
-      <Box flexDirection="row" alignItems="center" gap={1}>
-        <Box flexDirection="column" flexGrow={1}>
-          {stage(
-            r,
-            at,
-            color,
-            <Svg source={petSvg(d.shown)} alt={`${NAME}: ${d.headline}`} width={56} height={51} />,
-            56,
-          )}
-        </Box>
-        <Box flexDirection="column" width="50%">
+      <Box flexDirection="column">
+        {stage(
+          r,
+          at,
+          color,
+          <Svg source={petSvg(d.shown)} alt={`${NAME}: ${d.headline}`} width={56} height={51} />,
+          56,
+        )}
+        <Box flexDirection="column">
           <Text wrap="truncate-end">
             <Text weight="bold" color={color}>
               {NAME}
